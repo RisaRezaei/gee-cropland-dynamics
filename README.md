@@ -6,6 +6,10 @@
 
 Map where cropland **stayed**, **appeared** or **disappeared** between 2003 and 2019 at 30 m resolution, and measure how much area changed, for any region on Earth. Built on the GLAD global cropland maps (Potapov et al., 2022) in Google Earth Engine.
 
+![Cropland gain, loss and stable areas 2003-2019 in an example region](docs/preview.png)
+
+<sub>Example output: cropland change 2003 → 2019 around Lake Urmia, with area per class computed at 30 m.</sub>
+
 ## What the script does
 
 | Class | Rule | Colour |

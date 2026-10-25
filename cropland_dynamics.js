@@ -38,10 +38,12 @@ var CONFIG = {
 // ---- Inputs: GLAD global cropland extent (1 = cropland) ----------------
 // unmask(0) makes non-cropland explicit, so "not cropland" is 0 rather than
 // masked and the gain/loss logic below is evaluated everywhere.
+// filterBounds keeps only the tiles that touch the ROI, which avoids
+// "memory capacity exceeded" errors when the map is drawn.
 var crop2003 = ee.ImageCollection('users/potapovpeter/Global_cropland_2003')
-  .mosaic().gt(0).unmask(0).rename('crop2003');
+  .filterBounds(CONFIG.roi).mosaic().gt(0).unmask(0).rename('crop2003');
 var crop2019 = ee.ImageCollection('users/potapovpeter/Global_cropland_2019')
-  .mosaic().gt(0).unmask(0).rename('crop2019');
+  .filterBounds(CONFIG.roi).mosaic().gt(0).unmask(0).rename('crop2019');
 
 // Only keep pixels that were cropland in at least one of the two years.
 var everCrop = crop2003.or(crop2019);
