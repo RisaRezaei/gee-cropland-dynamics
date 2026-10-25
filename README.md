@@ -3,6 +3,7 @@
 [![Google Earth Engine](https://img.shields.io/badge/Google%20Earth%20Engine-JavaScript-34A853?logo=googleearth&logoColor=white)](https://code.earthengine.google.com)
 [![Data: GLAD cropland](https://img.shields.io/badge/data-GLAD%20global%20cropland%2030%20m-6D4C41)](https://glad.umd.edu/dataset/croplands)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23646395.svg)](https://doi.org/10.5281/zenodo.23646395)
 
 Map where cropland **stayed**, **appeared** or **disappeared** between 2003 and 2019 at 30 m resolution, and measure how much area changed, for any region on Earth. Built on the GLAD global cropland maps (Potapov et al., 2022) in Google Earth Engine.
 
@@ -58,6 +59,12 @@ Areas are computed with `ee.Image.pixelArea()`, so they are true surface areas, 
 ## Data and citation
 
 Potapov, P., Turubanova, S., Hansen, M. C., et al. (2022). Global maps of cropland extent and change show accelerated cropland expansion in the twenty-first century. *Nature Food*, 3, 19–28. https://doi.org/10.1038/s43016-021-00429-z
+
+## Cite this tool
+
+Abbasalizadehrezaei, P. (2026). *Global Cropland Dynamics, 2003-2019* (Version 1.0.0) [Software]. Zenodo. https://doi.org/10.5281/zenodo.23646395
+
+GitHub also offers a ready-made citation under **Cite this repository** (from [CITATION.cff](CITATION.cff)).
 
 ## Author
 
