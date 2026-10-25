@@ -1,101 +1,62 @@
-# 🌾 Cropland Dynamics Mapping (2003–2019) using Google Earth Engine
+# Cropland Dynamics 2003–2019
 
- ## Overview
+[![Google Earth Engine](https://img.shields.io/badge/Google%20Earth%20Engine-JavaScript-34A853?logo=googleearth&logoColor=white)](https://code.earthengine.google.com)
+[![Data: GLAD cropland](https://img.shields.io/badge/data-GLAD%20global%20cropland%2030%20m-6D4C41)](https://glad.umd.edu/dataset/croplands)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
- This Earth Engine script analyzes global cropland changes between 2003 and 2019 using Potapov et al.'s global cropland datasets. It identifies stable cropland areas, gains (areas that became cropland), and losses (areas that ceased to be cropland). The final output includes a visual RGB map and a 3-band binary raster representing cropland dynamics, exported as a GeoTIFF.
+Map where cropland **stayed**, **appeared** or **disappeared** between 2003 and 2019 at 30 m resolution, and measure how much area changed, for any region on Earth. Built on the GLAD global cropland maps (Potapov et al., 2022) in Google Earth Engine.
 
----
-## Code Explanation
+## What the script does
 
-### **Step 1: Load Required Cropland Datasets**
-We begin by loading the cropland images from Earth Engine assets for the years 2003 and 2019. These are provided as ImageCollections and are converted into single mosaicked images:
-```javascript
-var crop2003 = ee.ImageCollection("users/potapovpeter/Global_cropland_2003").mosaic();
-var crop2019 = ee.ImageCollection("users/potapovpeter/Global_cropland_2019").mosaic();
-```
-### **Step 2: Create a Valid Mask**
-We define a mask to include only the areas that were cropland in either 2003 or 2019. This step filters out non-cropland areas entirely from the analysis.
-```javascript
-var mask = crop2003.add(crop2019).gt(0);
-```
-### **Step 3: Detect Cropland Change Categories**
-Three binary rasters are created:
-* _Stable_: Areas with cropland in both 2003 and 2019.
-* _Gain_: Areas that were not cropland in 2003 but became cropland in 2019.
-* _Loss_: Areas that were cropland in 2003 but not in 2019.
+| Class | Rule | Colour |
+|---|---|---|
+| **Stable** | cropland in 2003 **and** 2019 | green |
+| **Gain** | cropland in 2019 only | blue |
+| **Loss** | cropland in 2003 only | red |
 
-Each binary image is masked using the valid cropland area:
-```javascript
-var stable = crop2003.and(crop2019).updateMask(mask).rename('Stable');
-var gain   = crop2019.and(crop2003.not()).updateMask(mask).rename('Gain');
-var loss   = crop2003.and(crop2019.not()).updateMask(mask).rename('Loss');
-```
-### **Step 4: Combine Bands into a Single Multi-Band Image**
-The _stable_, _gain_, and _loss_ layers are stacked together into a single 3-band image for processing and export:
-```javascript
-var dynamicsStack = ee.Image.cat([stable, gain, loss]);
-```
-### **Step 5: Create an RGB Visualization Layer (Optional)**
-For easier visual inspection, we construct an RGB visualization where:
-* _Red_ = Loss
-* _Green_ = Stable
-* _Blue_ = Gain
+It then:
 
-This RGB image is for display only and is not exported:
-```javascript
-var rgbVis = ee.Image.cat([
-  loss.multiply(255),    
-  stable.multiply(255),  
-  gain.multiply(255)     
-]).visualize({min: 0, max: 255});
-```
-Display the RGB visualization and the original 3-band image:
-```javascript
-Map.setCenter(0, 20, 2);  // Center the map at equator for a global view
-Map.addLayer(rgbVis, {}, 'RGB Cropland Dynamics');
-Map.addLayer(dynamicsStack, 
-             {bands: ['Stable', 'Gain', 'Loss'], min: 0, max: 1}, 
-             '3-Band Binary Dynamics');
-```
-### **Step 6: Export the 3-Band Raster** 
-The final step exports the 3-band binary image as a GeoTIFF to Google Drive. This image can be further processed in GIS software such as QGIS or ArcGIS.
-```javascript
-Export.image.toDrive({
-  image: dynamicsStack,
-  description: 'Cropland_Dynamics_3Bands',
-  folder: 'EarthEngine',
-  fileNamePrefix: 'cropland_dynamics_2003_2019_3bands',
-  scale: 30,
-  region: ee.Geometry.Rectangle([-180, -88, 180, 88]),  // Nearly global extent
-  maxPixels: 1e13
-});
-```
----
-💡 Notes
+- shows the classes on the map with a legend
+- prints the area of each class (km²) inside your region of interest
+- exports a 3-band binary GeoTIFF (`Stable`, `Gain`, `Loss`) and/or a single-band class map (`1` stable, `2` gain, `3` loss)
 
-The image scale of 30 meters matches Landsat resolution.
+## Quick start
 
-The RGB visualization is not used in the export; it is meant for visual inspection on the Earth Engine interface.
+1. Open the [Earth Engine Code Editor](https://code.earthengine.google.com).
+2. Paste [`cropland_dynamics.js`](cropland_dynamics.js) into a new script.
+3. Set `CONFIG.roi` to your region: a drawn geometry, an asset, or a rectangle.
+4. Press **Run**, then start the exports from the **Tasks** tab.
 
-The mask ensures the analysis is limited to locations where cropland existed in either year, making the dynamics map more meaningful.
+## Configuration
 
----
-📂 Output Files
+| Parameter | Default | Description |
+|---|---|---|
+| `roi` | example rectangle | Region for statistics and export |
+| `exportStack` | `true` | Export the 3-band binary GeoTIFF |
+| `exportClassMap` | `true` | Export the single-band class GeoTIFF |
+| `computeAreas` | `true` | Print stable / gain / loss area in km² |
+| `scale` | `30` | Resolution in metres (native 30 m) |
 
-cropland_dynamics_2003_2019_3bands.tif: A 3-band GeoTIFF containing:
+## Outputs
 
-* _Band 1_: Stable (1 = cropland in both years, 0 = otherwise)
+| File | Bands | Values |
+|---|---|---|
+| `cropland_dynamics_2003_2019_3bands.tif` | `Stable`, `Gain`, `Loss` | 1 / 0, masked outside cropland |
+| `cropland_dynamics_2003_2019_classes.tif` | `class` | 1 stable · 2 gain · 3 loss |
 
-* _Band 2_: Gain (1 = gained cropland, 0 = otherwise)
+Areas are computed with `ee.Image.pixelArea()`, so they are true surface areas, not pixel counts.
 
-* _Band 3_: Loss (1 = lost cropland, 0 = otherwise)
----
+## Notes
 
+- Non-cropland is set to 0 before the comparison, so gain and loss are evaluated everywhere and not only where both maps have data.
+- Large regions (continents or the globe) can take a long time to export; reduce the ROI or raise `scale` for a quick look.
 
+## Data and citation
 
+Potapov, P., Turubanova, S., Hansen, M. C., et al. (2022). Global maps of cropland extent and change show accelerated cropland expansion in the twenty-first century. *Nature Food*, 3, 19–28. https://doi.org/10.1038/s43016-021-00429-z
 
+## Author
 
+**Parisa Abbasalizadehrezaei** · [risarezaei.github.io](https://risarezaei.github.io)
 
-
-
-
+Released under the [MIT License](LICENSE).
